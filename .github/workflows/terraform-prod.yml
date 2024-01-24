@@ -71,7 +71,7 @@ jobs:
     - name: Terraform Format
       id: fmt
       if: github.ref != 'refs/heads/main'
-      run: terraform fmt -check
+      run: terraform fmt -check -recursive
       
     # Run a terraform validate for push and PR on non-main branch
     # Run even if formatting fails
