@@ -14,8 +14,8 @@ variable "turned_on" {
 }
 
 variable "resource_group" {
-  type = object({
-    name     = self.name
-    location = self.location
-  })
-}
+ type = object({
+    name     = string
+    location = string
+ })
+} 
