@@ -1,2 +1,2 @@
 region = "eastus"
-turned_on = false
+turned_on = true
