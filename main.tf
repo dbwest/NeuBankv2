@@ -5,3 +5,6 @@ resource "azurerm_resource_group" "this" {
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
+module "common" {
+  source = "./modules/common"
+}
