@@ -59,7 +59,6 @@ jobs:
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
-        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
         id: plan-upload
         with:
           workspace: ${{ env.TF_WORKSPACE }}
@@ -68,7 +67,6 @@ jobs:
 
       - name: Create Plan Run
         uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
-        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
         id: plan-run
         with:
           workspace: ${{ env.TF_WORKSPACE }}
@@ -77,11 +75,24 @@ jobs:
 
       - name: Get Plan Output
         uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
-        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
         id: plan-output
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
+          # # Run Checkov against configuration
+      - name: Checkov
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          quiet: true
+          framework: terraform
+          container_user: 1000
+          output_format: github_failed_only
+          soft_fail: false
+          skip_check: CKV_AZURE_88,CKV_AZURE_71,CKV_AZURE_16,CKV_AZURE_80,CKV_AZURE_63,CKV_AZURE_18,CKV_AZURE_65,CKV_AZURE_17,CKV_AZURE_13,CKV_AZURE_78,CKV_AZURE_66,CKV_AZURE_44,CKV_AZURE_35,CKV_AZURE_43,CKV_AZURE_33,CKV_AZURE_3,CKV2_AZURE_1,CKV2_AZURE_18,CKV2_AZURE_8,CKV2_AZURE_21,CKV_GIT_4,CKV_AZURE_206,CKV_AZURE_225,CKV_AZURE_212,CKV_AZURE_213
+  
       - name: Update PR
         uses: actions/github-script@v6
         if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
@@ -126,20 +137,6 @@ jobs:
               repo: context.repo.repo,
               body: output
             });
-
-    # # Run Checkov against configuration
-      - name: Checkov
-        if: github.event_name == 'pull_request'
-        continue-on-error: true
-        id: checkov
-        uses: bridgecrewio/checkov-action@master
-        with:
-          quiet: true
-          framework: terraform
-          container_user: 1000
-          output_format: github_failed_only
-          soft_fail: false
-          skip_check: CKV_AZURE_88,CKV_AZURE_71,CKV_AZURE_16,CKV_AZURE_80,CKV_AZURE_63,CKV_AZURE_18,CKV_AZURE_65,CKV_AZURE_17,CKV_AZURE_13,CKV_AZURE_78,CKV_AZURE_66,CKV_AZURE_44,CKV_AZURE_35,CKV_AZURE_43,CKV_AZURE_33,CKV_AZURE_3,CKV2_AZURE_1,CKV2_AZURE_18,CKV2_AZURE_8,CKV2_AZURE_21,CKV_GIT_4,CKV_AZURE_206,CKV_AZURE_225,CKV_AZURE_212,CKV_AZURE_213
 
     # # Add a comment to pull requests with plan results
     # - name: add-plan-comment
