@@ -50,14 +50,14 @@ jobs:
       # - name: Setup Graphviz
       #   uses: ts-graphviz/setup-graphviz@v1.2.0
 
-      - name: Terraform Plan
-        id: plan
-        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          echo 'plan<<EOF' >> $GITHUB_OUTPUT
-          terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+      # - name: Terraform Plan
+      #   id: plan
+      #   if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+      #   shell: bash
+      #   run: |
+      #     echo 'plan<<EOF' >> $GITHUB_OUTPUT
+      #     terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
+      #     echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
