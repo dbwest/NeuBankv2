@@ -25,37 +25,14 @@ jobs:
     name: "Terraform"
     permissions: write-all
     runs-on: ubuntu-latest
-
-    # Use the Bash shell regardless whether the GitHub Actions runner is ubuntu-latest, macos-latest, or windows-latest
-    # Set the working directory to main for the config files
     defaults:
       run:
         shell: bash
         working-directory: ./
 
     steps:
-      # Checkout the repository to the GitHub Actions runner
       - name: Checkout
         uses: actions/checkout@v4.1.1
-
-      # Install the preferred version of Terraform CLI
-      # - name: Setup Terraform
-      #   uses: hashicorp/setup-terraform@v3.0.0
-      #   with:
-      #     terraform_version: 1.7.0
-      #     terraform_wrapper: false
-
-      # - name: Setup Graphviz
-      #   uses: ts-graphviz/setup-graphviz@v1.2.0
-
-      # - name: Terraform Plan
-      #   id: plan
-      #   if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
-      #   shell: bash
-      #   run: |
-      #     echo 'plan<<EOF' >> $GITHUB_OUTPUT
-      #     terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
-      #     echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
@@ -79,7 +56,6 @@ jobs:
         with:
           plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-          # # Run Checkov against configuration
       - name: Checkov
         if: github.event_name == 'pull_request'
         continue-on-error: true
@@ -138,42 +114,6 @@ jobs:
               body: output
             });
 
-    # # Add a comment to pull requests with plan results
-    # - name: add-plan-comment
-    #   id: comment
-    #   uses: actions/github-script@v3
-    #   if: github.event_name == 'pull_request' && (success() || failure())
-    #   env:
-    #     PLAN: "terraform\n${{ steps.plan.outputs.plan }}"
-    #   with:
-    #     github-token: ${{ secrets.GITHUB_TOKEN }}
-    #     script: |
-    #       const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-    #       #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-    #       #### Terraform Validation 🤖${{ steps.validate.outputs.stdout }}
-    #       #### Checkov 🧪\`${{ steps.checkov.outcome }}\`
-
-    #       <details><summary>Show Plan</summary>
-
-    #       ${{steps.plan.outputs.plan}}
-
-    #       </details>
-
-    #       <details><summary>Show Checkov Results</summary>
-
-    #       ${process.env.CHECKOV_RESULTS}
-
-    #       </details>
-
-    #       *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
-
-    #       github.issues.createComment({
-    #         issue_number: context.issue.number,
-    #         owner: context.repo.owner,
-    #         repo: context.repo.repo,
-    #         body: output
-    #       })
-
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
         id: apply-upload
@@ -196,52 +136,3 @@ jobs:
         with:
           run: ${{ steps.apply-run.outputs.run_id }}
           comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
-
-    # - name: Terraform Apply
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: terraform apply -auto-approve
-
-    # - name: Generate Arch Diagram .dot
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: terraform graph > prod_infrastructure.dot
-
-    # - name: Generate Arch Diagram .png
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: terraform graph | dot -Tpng > prod_infrastructure.png
-
-    # - name: Upload Artifact
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   uses: actions/upload-artifact@v4.2.0
-    #   with:
-    #     name: prod-infrastructure
-    #     path: prod_infrastructure.png
-
-    # - name: Add Arch Diagrams to Branch
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: |
-    #     git config --local user.email "action@github.com"
-    #     git config --local user.name "GitHub Action"
-    #     git add prod_infrastructure.png
-    #     git add prod_infrastructure.dot
-    #     git commit -m "Update prod_infrastructure.png and prod_infrastructure.dot"
-    #     git push
-
-    # - name: Generate Overview Diagram
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: dot overview.dot -Tpng > overview.png
-
-    # - name: Upload Artifact
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   uses: actions/upload-artifact@v4.2.0
-    #   with:
-    #     name: overview
-    #     path: overview.png
-
-    # - name: Add Overview Diagram to Branch
-    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    #   run: |
-    #     git config --local user.email "action@github.com"
-    #     git config --local user.name "GitHub Action"
-    #     git add overview.png
-    #     git commit -m "Update overview.png"
-    #     git push
