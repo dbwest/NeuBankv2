@@ -17,10 +17,8 @@ env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
 #Special permissions required for OIDC authentication
-# permissions:
-#   id-token: write
-#   contents: read
-#   pull-requests: write
+permissions:
+  contents: read
 
 jobs:
   terraform:
@@ -50,14 +48,14 @@ jobs:
       # - name: Setup Graphviz
       #   uses: ts-graphviz/setup-graphviz@v1.2.0
 
-      - name: Terraform Plan
-        id: plan
-        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          echo 'plan<<EOF' >> $GITHUB_OUTPUT
-          terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
-          echo 'EOF' >> $GITHUB_OUTPUT
+      # - name: Terraform Plan
+      #   id: plan
+      #   if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+      #   shell: bash
+      #   run: |
+      #     echo 'plan<<EOF' >> $GITHUB_OUTPUT
+      #     terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
+      #     echo 'EOF' >> $GITHUB_OUTPUT
 
       - name: Upload Configuration
         uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
@@ -100,7 +98,15 @@ jobs:
             const botComment = comments.find(comment => {
               return comment.user.type === 'Bot' && comment.body.includes('Terraform Cloud Plan Output')
             });
-            const output = `#### Terraform Cloud Plan Output
+            const output = `#### Checkov 🧪\${{ steps.checkov.outcome }}\
+
+            <details><summary>Show Checkov Results</summary>
+
+            ${process.env.CHECKOV_RESULTS}
+
+            </details>
+
+            #### Terraform Cloud Plan Output
                 \`\`\`
                 Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
                 \`\`\`
@@ -122,17 +128,18 @@ jobs:
             });
 
     # # Run Checkov against configuration
-    # - name: Checkov
-    #   if: github.event_name == 'pull_request'
-    #   id: checkov
-    #   uses: bridgecrewio/checkov-action@master
-    #   with:
-    #     quiet: true
-    #     framework: terraform
-    #     container_user: 1000
-    #     output_format: github_failed_only
-    #     soft_fail: false
-    #     skip_check: CKV_AZURE_88,CKV_AZURE_71,CKV_AZURE_16,CKV_AZURE_80,CKV_AZURE_63,CKV_AZURE_18,CKV_AZURE_65,CKV_AZURE_17,CKV_AZURE_13,CKV_AZURE_78,CKV_AZURE_66,CKV_AZURE_44,CKV_AZURE_35,CKV_AZURE_43,CKV_AZURE_33,CKV_AZURE_3,CKV2_AZURE_1,CKV2_AZURE_18,CKV2_AZURE_8,CKV2_AZURE_21,CKV_GIT_4,CKV_AZURE_206,CKV_AZURE_225,CKV_AZURE_212,CKV_AZURE_213
+      - name: Checkov
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        id: checkov
+        uses: bridgecrewio/checkov-action@master
+        with:
+          quiet: true
+          framework: terraform
+          container_user: 1000
+          output_format: github_failed_only
+          soft_fail: false
+          skip_check: CKV_AZURE_88,CKV_AZURE_71,CKV_AZURE_16,CKV_AZURE_80,CKV_AZURE_63,CKV_AZURE_18,CKV_AZURE_65,CKV_AZURE_17,CKV_AZURE_13,CKV_AZURE_78,CKV_AZURE_66,CKV_AZURE_44,CKV_AZURE_35,CKV_AZURE_43,CKV_AZURE_33,CKV_AZURE_3,CKV2_AZURE_1,CKV2_AZURE_18,CKV2_AZURE_8,CKV2_AZURE_21,CKV_GIT_4,CKV_AZURE_206,CKV_AZURE_225,CKV_AZURE_212,CKV_AZURE_213
 
     # # Add a comment to pull requests with plan results
     # - name: add-plan-comment
@@ -169,6 +176,22 @@ jobs:
     #         repo: context.repo.repo,
     #         body: output
     #       })
+
+      - name: Create Apply Run
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        id: apply-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.apply-upload.outputs.configuration_version_id }}
+
+      - name: Apply
+        uses: hashicorp/tfc-workflows-github/actions/apply-run@v1.0.0
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push' && fromJSON(steps.apply-run.outputs.payload).data.attributes.actions.IsConfirmable
+        id: apply
+        with:
+          run: ${{ steps.apply-run.outputs.run_id }}
+          comment: "Apply Run from GitHub Actions CI ${{ github.sha }}"
 
     # - name: Terraform Apply
     #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
