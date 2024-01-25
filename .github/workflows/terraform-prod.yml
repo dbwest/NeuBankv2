@@ -17,10 +17,8 @@ env:
   TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
 #Special permissions required for OIDC authentication
-# permissions:
-#   id-token: write
-#   contents: read
-#   pull-requests: write
+permissions:
+  contents: read
 
 jobs:
   terraform:
