@@ -94,10 +94,13 @@ jobs:
             </details>
 
             #### Terraform Cloud Plan Output
+
+            <details><summary>Show Plan</summary>
                 \`\`\`
                 Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
-                \`\`\`
                 [Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+                \`\`\`
+            </details>
                 `;
             // 3. Delete previous comment so PR timeline makes sense
             if (botComment) {
