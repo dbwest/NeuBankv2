@@ -7,8 +7,8 @@ variable "company" {
   default = "neubank"
 }
 
-variable "deploy" {
-  description = "whether to deploy the env or not"
+variable "turned_on" {
+  description = "whether the env is turned on (should be deployed) or not"
   type = bool
   default = false
 }
