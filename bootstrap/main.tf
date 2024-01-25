@@ -41,69 +41,70 @@ resource "azurerm_resource_group" "setup" {
   location = var.azure_location
 }
 
-resource "azurerm_storage_account" "sa" {
-  name                          = local.storage_account_name
-  resource_group_name           = azurerm_resource_group.setup.name
-  location                      = var.azure_location
-  account_tier                  = "Standard"
-  account_replication_type      = "LRS"
-  # After bootstrapping and creating workspaces you can uncomment this and run the
-  # `Update Remote State and Actions Secrets with Terraform` Github Action
+# resource "azurerm_storage_account" "sa" {
+#   name                     = local.storage_account_name
+#   resource_group_name      = azurerm_resource_group.setup.name
+#   location                 = var.azure_location
+#   account_tier             = "Standard"
+#   account_replication_type = "LRS"
+#   # After bootstrapping and creating workspaces you can uncomment this and run the
+#   # `Update Remote State and Actions Secrets with Terraform` Github Action
 
-  public_network_access_enabled = false
-}
+#   # public_network_access_enabled = false
+# }
 
-data "azurerm_storage_account_sas" "sas" {
-  connection_string = azurerm_storage_account.sa.primary_connection_string
-  https_only        = true
+# data "azurerm_storage_account_sas" "sas" {
+#   connection_string = azurerm_storage_account.sa.primary_connection_string
+#   https_only        = true
 
-  resource_types {
-    service   = true
-    container = false
-    object    = false
-  }
+#   resource_types {
+#     service   = true
+#     container = false
+#     object    = false
+#   }
 
-  services {
-    blob  = true
-    queue = false
-    table = false
-    file  = false
-  }
+#   services {
+#     blob  = true
+#     queue = false
+#     table = false
+#     file  = false
+#   }
 
-  start  = "2018-03-21T00:00:00Z"
-  expiry = "2025-03-21T00:00:00Z"
+#   start  = "2018-03-21T00:00:00Z"
+#   expiry = "2025-03-21T00:00:00Z"
 
-  permissions {
-    read    = true
-    write   = true
-    delete  = true
-    list    = true
-    add     = true
-    create  = true
-    update  = true
-    process = true
-    tag     = true
-    filter  = true
-  }
-}
+#   permissions {
+#     read    = true
+#     write   = true
+#     delete  = true
+#     list    = true
+#     add     = true
+#     create  = true
+#     update  = true
+#     process = true
+#     tag     = true
+#     filter  = true
+#   }
+# }
 
-resource "azurerm_storage_container" "ct" {
-  name                 = "terraform-state"
-  storage_account_name = azurerm_storage_account.sa.name
-}
+# resource "azurerm_storage_container" "ct" {
+#   name                 = "terraform-state"
+#   storage_account_name = azurerm_storage_account.sa.name
+# }
 
 ## GitHub secrets
 
 resource "github_actions_secret" "actions_secret" {
   for_each = {
-    STORAGE_ACCOUNT     = azurerm_storage_account.sa.name
-    RESOURCE_GROUP      = azurerm_storage_account.sa.resource_group_name
-    CONTAINER_NAME      = azurerm_storage_container.ct.name
+    # STORAGE_ACCOUNT     = azurerm_storage_account.sa.name
+    # RESOURCE_GROUP      = azurerm_storage_account.sa.resource_group_name
+    # CONTAINER_NAME      = azurerm_storage_container.ct.name
     ARM_CLIENT_ID       = azuread_service_principal.gh_actions.application_id
     ARM_CLIENT_SECRET   = azuread_service_principal_password.gh_actions.value
     ARM_SUBSCRIPTION_ID = data.azurerm_subscription.current.subscription_id
     ARM_TENANT_ID       = data.azuread_client_config.current.tenant_id
-    ARM_SAS_TOKEN       = data.azurerm_storage_account_sas.sas.sas
+    TF_API_TOKEN        = var.tfe_token
+    # ARM_SAS_TOKEN       = data.azurerm_storage_account_sas.sas.sas
   }
 
   repository      = var.github_repository
@@ -111,15 +112,74 @@ resource "github_actions_secret" "actions_secret" {
   plaintext_value = each.value
 }
 
+resource "tfe_organization" "this" {
+  name  = lower(var.github_repository)
+  email = var.admin_email
+}
+
+variable "environments" {
+  description = "List of environments"
+  type        = list(string)
+  default     = ["dev", "test", "prod"]
+}
+
+resource "tfe_workspace" "workspace" {
+  for_each = toset(var.environments)
+
+  name         = each.value
+  organization = lower(var.github_repository)
+  tag_names    = [each.value, "app"]
+}
+
+resource "tfe_variable" "arm_client_id" {
+  for_each = toset(var.environments)
+
+  key          = "ARM_CLIENT_ID"
+  value        = azuread_service_principal.gh_actions.application_id
+  category     = "env"
+  workspace_id = tfe_workspace.workspace[each.key].id
+  description  = "Azure Resource Manager Client Id"
+}
+
+resource "tfe_variable" "arm_subscription_id" {
+  for_each = toset(var.environments)
+
+  key          = "ARM_SUBSCRIPTION_ID"
+  value        = data.azurerm_subscription.current.subscription_id
+  category     = "env"
+  workspace_id = tfe_workspace.workspace[each.key].id
+  description  = "Azure Resource Manager Subscription Id"
+}
+
+resource "tfe_variable" "arm_client_secret" {
+  for_each = toset(var.environments)
+
+  key          = "ARM_CLIENT_SECRET"
+  value        = azuread_service_principal_password.gh_actions.value
+  category     = "env"
+  workspace_id = tfe_workspace.workspace[each.key].id
+  description  = "Azure Resource Client Secret"
+  sensitive    = true
+}
+
+resource "tfe_variable" "arm_tenant_id" {
+  for_each = toset(var.environments)
+
+  key          = "ARM_TENANT_ID"
+  value        = data.azuread_client_config.current.tenant_id
+  category     = "env"
+  workspace_id = tfe_workspace.workspace[each.key].id
+  description  = "Azure Resource Tenant ID"
+}
+
 resource "null_resource" "local-provisioner" {
   provisioner "local-exec" {
     command = <<EOF
-      ACCOUNT_KEY=$(az storage account keys list --resource-group ${azurerm_storage_account.sa.resource_group_name} --account-name ${azurerm_storage_account.sa.name} --query '[0].value' -o tsv)
-      echo "export ARM_ACCESS_KEY=$ACCOUNT_KEY" >> ../.env
-      echo 'export STORAGE_ACCOUNT=${azurerm_storage_account.sa.name}' >> ../.env
-      echo 'export RESOURCE_GROUP=${azurerm_storage_account.sa.resource_group_name}' >> ../.env
-      echo 'export CONTAINER_NAME=${azurerm_storage_container.ct.name}' >> ../.env
-      echo 'export ARM_SAS_TOKEN="${data.azurerm_storage_account_sas.sas.sas}"' >> ../.env      
+ 
+      echo 'export ARM_CLIENT_ID=${azuread_service_principal.gh_actions.application_id}' >> ../.env
+      echo 'export ARM_CLIENT_SECRET=${azuread_service_principal_password.gh_actions.value}' >> ../.env
+      echo 'export ARM_SUBSCRIPTION_ID=${data.azurerm_subscription.current.subscription_id}' >> ../.env
+      echo 'export ARM_TENANT_ID=${data.azuread_client_config.current.tenant_id}' >> ../.env
     EOF
   }
 }

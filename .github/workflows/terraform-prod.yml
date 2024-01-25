@@ -1,36 +1,30 @@
-name: 'Terraform Prod'
+name: "Terraform Prod"
 
 on:
   push:
-     branches:
-       - main
+    branches:
+      - main
   pull_request:
-     branches:
-       - main
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
 
 env:
- WORKSPACE: prod
- ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
- ARM_CLIENT_SECRET: ${{ secrets.ARM_CLIENT_SECRET }}
- ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
- ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
- RESOURCE_GROUP: ${{ secrets.RESOURCE_GROUP }}
- STORAGE_ACCOUNT: ${{ secrets.STORAGE_ACCOUNT }}
- CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
- ARM_SAS_TOKEN: ${{ secrets.ARM_SAS_TOKEN }}
+  TF_WORKSPACE: prod
+  TF_CLOUD_ORGANIZATION: neubankv2
+  TF_API_TOKEN: "${{ secrets.TF_API_TOKEN }}"
 
 #Special permissions required for OIDC authentication
-permissions:
-    id-token: write
-    contents: read
-    pull-requests: write
+# permissions:
+#   id-token: write
+#   contents: read
+#   pull-requests: write
 
 jobs:
- terraform:
-    name: 'Terraform'
+  terraform:
+    name: "Terraform"
     permissions: write-all
     runs-on: ubuntu-latest
 
@@ -42,149 +36,185 @@ jobs:
         working-directory: ./
 
     steps:
-    # Checkout the repository to the GitHub Actions runner
-    - name: Checkout
-      uses: actions/checkout@v4.1.1
+      # Checkout the repository to the GitHub Actions runner
+      - name: Checkout
+        uses: actions/checkout@v4.1.1
 
-    # Install the preferred version of Terraform CLI 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3.0.0
-      with:
-        terraform_version: 1.7.0
-        terraform_wrapper: false
-    
-    - name: Setup Graphviz
-      uses: ts-graphviz/setup-graphviz@v1.2.0
+      # Install the preferred version of Terraform CLI
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v3.0.0
+      #   with:
+      #     terraform_version: 1.7.0
+      #     terraform_wrapper: false
 
-    # Initialize a new or existing Terraform working directory by creating initial files, loading any remote state, downloading modules, etc.
-    - name: Terraform First Init
-      id: init
-      run: terraform init -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT }}" -backend-config="container_name=${{ env.CONTAINER_NAME }}" -backend-config="resource_group_name=${{ env.RESOURCE_GROUP }}" 
+      # - name: Setup Graphviz
+      #   uses: ts-graphviz/setup-graphviz@v1.2.0
 
-    - name: Switch Workspace
-      id: workspace
-      run: terraform workspace select ${{ env.WORKSPACE }}
+      - name: Terraform Plan
+        id: plan
+        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          echo 'plan<<EOF' >> $GITHUB_OUTPUT
+          terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
 
-    - name: Terraform ReInit
-      id: reinit
-      run: terraform init -backend-config="storage_account_name=${{ env.STORAGE_ACCOUNT }}" -backend-config="container_name=${{ env.CONTAINER_NAME }}" -backend-config="resource_group_name=${{ env.RESOURCE_GROUP }}" 
+      - name: Upload Configuration
+        uses: hashicorp/tfc-workflows-github/actions/upload-configuration@v1.0.0
+        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+        id: plan-upload
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          directory: ./
+          speculative: true
 
-    - name: Terraform Format
-      id: fmt
-      if: github.ref != 'refs/heads/main'
-      run: terraform fmt -check
-      
-    # Run a terraform validate for push and PR on non-main branch
-    # Run even if formatting fails
-    - name: Terraform Validate
-      id: validate
-      if: github.ref != 'refs/heads/main' && (success() || failure())
-      run: terraform validate
+      - name: Create Plan Run
+        uses: hashicorp/tfc-workflows-github/actions/create-run@v1.0.0
+        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+        id: plan-run
+        with:
+          workspace: ${{ env.TF_WORKSPACE }}
+          configuration_version: ${{ steps.plan-upload.outputs.configuration_version_id }}
+          plan_only: true
 
-    # Run a terraform plan for pull requests only
-    - name: Terraform Plan
-      id: plan
-      if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
-      shell: bash
-      run: |
-        echo 'plan<<EOF' >> $GITHUB_OUTPUT
-        terraform plan -no-color -out=tfplan >> $GITHUB_OUTPUT
-        echo 'EOF' >> $GITHUB_OUTPUT
+      - name: Get Plan Output
+        uses: hashicorp/tfc-workflows-github/actions/plan-output@v1.0.0
+        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+        id: plan-output
+        with:
+          plan: ${{ fromJSON(steps.plan-run.outputs.payload).data.relationships.plan.data.id }}
 
-    # Run Checkov against configuration
-    - name: Checkov
-      if: github.event_name == 'pull_request'
-      id: checkov
-      uses: bridgecrewio/checkov-action@master
-      with:
-        quiet: true
-        framework: terraform
-        container_user: 1000
-        output_format: github_failed_only
-        soft_fail: false
-        skip_check: CKV_AZURE_88,CKV_AZURE_71,CKV_AZURE_16,CKV_AZURE_80,CKV_AZURE_63,CKV_AZURE_18,CKV_AZURE_65,CKV_AZURE_17,CKV_AZURE_13,CKV_AZURE_78,CKV_AZURE_66,CKV_AZURE_44,CKV_AZURE_35,CKV_AZURE_43,CKV_AZURE_33,CKV_AZURE_3,CKV2_AZURE_1,CKV2_AZURE_18,CKV2_AZURE_8,CKV2_AZURE_21,CKV_GIT_4,CKV_AZURE_206,CKV_AZURE_225,CKV_AZURE_212,CKV_AZURE_213
+      - name: Update PR
+        uses: actions/github-script@v6
+        if: github.event.pull_request.base.ref == 'main' && github.event_name == 'pull_request'
+        id: plan-comment
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            // 1. Retrieve existing bot comments for the PR
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const botComment = comments.find(comment => {
+              return comment.user.type === 'Bot' && comment.body.includes('Terraform Cloud Plan Output')
+            });
+            const output = `#### Terraform Cloud Plan Output
+                \`\`\`
+                Plan: ${{ steps.plan-output.outputs.add }} to add, ${{ steps.plan-output.outputs.change }} to change, ${{ steps.plan-output.outputs.destroy }} to destroy.
+                \`\`\`
+                [Terraform Cloud Plan](${{ steps.plan-run.outputs.run_link }})
+                `;
+            // 3. Delete previous comment so PR timeline makes sense
+            if (botComment) {
+              github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+              });
+            }
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
 
-    # Add a comment to pull requests with plan results
-    - name: add-plan-comment
-      id: comment
-      uses: actions/github-script@v3
-      if: github.event_name == 'pull_request' && (success() || failure())
-      env:
-        PLAN: "terraform\n${{ steps.plan.outputs.plan }}"
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        script: |
-          const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-          #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-          #### Terraform Validation 🤖${{ steps.validate.outputs.stdout }}
-          #### Checkov 🧪\`${{ steps.checkov.outcome }}\`
-      
-          <details><summary>Show Plan</summary>
-          
-          ${{steps.plan.outputs.plan}}
-          
-          </details>
+    # # Run Checkov against configuration
+    # - name: Checkov
+    #   if: github.event_name == 'pull_request'
+    #   id: checkov
+    #   uses: bridgecrewio/checkov-action@master
+    #   with:
+    #     quiet: true
+    #     framework: terraform
+    #     container_user: 1000
+    #     output_format: github_failed_only
+    #     soft_fail: false
+    #     skip_check: CKV_AZURE_88,CKV_AZURE_71,CKV_AZURE_16,CKV_AZURE_80,CKV_AZURE_63,CKV_AZURE_18,CKV_AZURE_65,CKV_AZURE_17,CKV_AZURE_13,CKV_AZURE_78,CKV_AZURE_66,CKV_AZURE_44,CKV_AZURE_35,CKV_AZURE_43,CKV_AZURE_33,CKV_AZURE_3,CKV2_AZURE_1,CKV2_AZURE_18,CKV2_AZURE_8,CKV2_AZURE_21,CKV_GIT_4,CKV_AZURE_206,CKV_AZURE_225,CKV_AZURE_212,CKV_AZURE_213
 
-          <details><summary>Show Checkov Results</summary>
+    # # Add a comment to pull requests with plan results
+    # - name: add-plan-comment
+    #   id: comment
+    #   uses: actions/github-script@v3
+    #   if: github.event_name == 'pull_request' && (success() || failure())
+    #   env:
+    #     PLAN: "terraform\n${{ steps.plan.outputs.plan }}"
+    #   with:
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}
+    #     script: |
+    #       const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+    #       #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+    #       #### Terraform Validation 🤖${{ steps.validate.outputs.stdout }}
+    #       #### Checkov 🧪\`${{ steps.checkov.outcome }}\`
 
-          ${process.env.CHECKOV_RESULTS}
+    #       <details><summary>Show Plan</summary>
 
-          </details>
-          
-          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
-            
-          github.issues.createComment({
-            issue_number: context.issue.number,
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            body: output
-          })
+    #       ${{steps.plan.outputs.plan}}
 
-    - name: Terraform Apply
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform apply -auto-approve
+    #       </details>
 
-    - name: Generate Arch Diagram .dot
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform graph > prod_infrastructure.dot
+    #       <details><summary>Show Checkov Results</summary>
 
-    - name: Generate Arch Diagram .png
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: terraform graph | dot -Tpng > prod_infrastructure.png
+    #       ${process.env.CHECKOV_RESULTS}
 
-    - name: Upload Artifact
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/upload-artifact@v4.2.0
-      with:
-        name: prod-infrastructure
-        path: prod_infrastructure.png
-    
-    - name: Add Arch Diagrams to Branch
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add prod_infrastructure.png
-        git add prod_infrastructure.dot
-        git commit -m "Update prod_infrastructure.png and prod_infrastructure.dot"
-        git push
-    
-    - name: Generate Overview Diagram
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: dot overview.dot -Tpng > overview.png
+    #       </details>
 
-    - name: Upload Artifact
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      uses: actions/upload-artifact@v4.2.0
-      with:
-        name: overview
-        path: overview.png
-    
-    - name: Add Overview Diagram to Branch
-      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add overview.png
-        git commit -m "Update overview.png"
-        git push
+    #       *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+
+    #       github.issues.createComment({
+    #         issue_number: context.issue.number,
+    #         owner: context.repo.owner,
+    #         repo: context.repo.repo,
+    #         body: output
+    #       })
+
+    # - name: Terraform Apply
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: terraform apply -auto-approve
+
+    # - name: Generate Arch Diagram .dot
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: terraform graph > prod_infrastructure.dot
+
+    # - name: Generate Arch Diagram .png
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: terraform graph | dot -Tpng > prod_infrastructure.png
+
+    # - name: Upload Artifact
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   uses: actions/upload-artifact@v4.2.0
+    #   with:
+    #     name: prod-infrastructure
+    #     path: prod_infrastructure.png
+
+    # - name: Add Arch Diagrams to Branch
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: |
+    #     git config --local user.email "action@github.com"
+    #     git config --local user.name "GitHub Action"
+    #     git add prod_infrastructure.png
+    #     git add prod_infrastructure.dot
+    #     git commit -m "Update prod_infrastructure.png and prod_infrastructure.dot"
+    #     git push
+
+    # - name: Generate Overview Diagram
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: dot overview.dot -Tpng > overview.png
+
+    # - name: Upload Artifact
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   uses: actions/upload-artifact@v4.2.0
+    #   with:
+    #     name: overview
+    #     path: overview.png
+
+    # - name: Add Overview Diagram to Branch
+    #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    #   run: |
+    #     git config --local user.email "action@github.com"
+    #     git config --local user.name "GitHub Action"
+    #     git add overview.png
+    #     git commit -m "Update overview.png"
+    #     git push

@@ -1,6 +1,6 @@
 .POSIX:
 .PHONY: *
-export ARM_SUBSCRIPTION_ID RESOURCE_GROUP STORAGE_ACCOUNT CONTAINER_NAME PAT_TOKEN_VALUE
+export ARM_SUBSCRIPTION_ID RESOURCE_GROUP STORAGE_ACCOUNT CONTAINER_NAME PAT_TOKEN_VALUE TFE_TOKEN
 export SUBSCRIPTION_NAME="Azure subscription 1"
 
 define terraform_cmd
@@ -11,7 +11,7 @@ TERRAFORM_ROOT_DIR := ./
 CI_BOOTSTRAP_ROOT_DIR := ./bootstrap
 
 BACKEND_CONFIG := -backend-config="storage_account_name=$(STORAGE_ACCOUNT)" -backend-config="container_name=$(CONTAINER_NAME)" -backend-config="resource_group_name=$(RESOURCE_GROUP)"
-BOOTSTRAP_CONFIG := -var token=$(PAT_TOKEN_VALUE)
+BOOTSTRAP_CONFIG := -var github_token=$(PAT_TOKEN_VALUE) -var tfe_token=$(TFE_TOKEN)
 TERRAFORM_CMD := $(call terraform_cmd,$(TERRAFORM_ROOT_DIR))
 
 bootstrap:
