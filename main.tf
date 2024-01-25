@@ -10,8 +10,8 @@ module "networking" {
   turned_on = var.turned_on
   source = "./modules/networking"
 
-  resource_group_name = azurerm_resource_group.this.name
-  resource_group_location = azurerm_resource_group.this.name
+  resource_group_name = azurerm_resource_group.this[0].name
+  resource_group_location = azurerm_resource_group.this[0].location
 
   region = var.region
 }
