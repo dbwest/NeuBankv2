@@ -1,2 +1,2 @@
-region = eastus
+region = "eastus"
 turned_on = true
