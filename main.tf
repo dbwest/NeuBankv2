@@ -6,11 +6,13 @@ resource "azurerm_resource_group" "this" {
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
-module "vnet" {
-  source = "./modules/networking/vnet"
-
-  resource_group = azurerm_resource_group.this
+module "networking" {
   turned_on = var.turned_on
+  source = "./modules/networking"
+
+  resource_group_name = azurerm_resource_group.this.name
+  resource_group_location = azurerm_resource_group.this.name
+
   region = var.region
 }
 
