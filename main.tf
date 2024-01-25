@@ -7,13 +7,14 @@ resource "azurerm_resource_group" "this" {
 }
 
 module "networking" {
-  turned_on = var.turned_on
+  count = var.turned_on ? 1 : 0
   source = "./modules/networking"
 
   resource_group_name = azurerm_resource_group.this[0].name
   resource_group_location = azurerm_resource_group.this[0].location
 
   region = var.region
+  turned_on = var.turned_on
 }
 
 module "common" {
