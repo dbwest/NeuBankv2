@@ -7,3 +7,7 @@ resource "azurerm_virtual_network" "this" {
 
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
+
+module "common" {
+  source = "../../common"
+}
