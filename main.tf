@@ -16,7 +16,7 @@ module "network" {
 }
 
 module "app_stack" {
-  count = 0
+  count  = var.enable ? 1 : 0
   source = "./modules/app_stack"
 
   company = var.company
