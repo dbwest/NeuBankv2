@@ -39,7 +39,7 @@ resource "azurerm_subnet_network_security_group_association" "db" {
 # Create a route table
 resource "azurerm_route_table" "db" {
   name                          = "${var.company}-${terraform.workspace}-${random_pet.db.id}-rt-${var.region}"
-  location                      = var.resource_group.location
+  location                      = var.region
   resource_group_name           = var.rg_name
   disable_bgp_route_propagation = false
 }
