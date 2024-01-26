@@ -10,6 +10,7 @@ resource "azurerm_storage_account" "blob" {
   location                        = var.region
   account_tier                    = "Standard"
   account_replication_type        = "LRS"
+  public_network_access_enabled   = false
   allow_nested_items_to_be_public = false
 
   tags = lookup(module.common.tags, terraform.workspace, null)
