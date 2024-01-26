@@ -13,11 +13,3 @@ resource "azurerm_application_insights" "this" {
   workspace_id        = azurerm_log_analytics_workspace.this.id
   application_type    = "web"
 }
-
-output "instrumentation_key" {
-  value = azurerm_application_insights.this.instrumentation_key
-}
-
-output "app_id" {
-  value = azurerm_application_insights.this.app_id
-}
