@@ -18,3 +18,7 @@ resource "azurerm_private_endpoint" "backend" {
 
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
+
+module "common" {
+  source = "../../common"
+}
