@@ -21,7 +21,6 @@ resource "azurerm_windows_web_app" "frontend" {
   }
 
   app_settings = {
-    "WEBSITE_VNET_ROUTE_ALL" = "1"
   }
 
   tags = lookup(module.common.tags, terraform.workspace, null)
@@ -40,7 +39,6 @@ resource "azurerm_windows_web_app" "backend" {
   }
 
   app_settings = {
-    "WEBSITE_VNET_ROUTE_ALL" = "1"
   }
 
   tags = lookup(module.common.tags, terraform.workspace, null)
