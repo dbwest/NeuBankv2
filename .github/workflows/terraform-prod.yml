@@ -160,6 +160,7 @@ jobs:
         path: prod_infrastructure.png
 
     - uses: asannou/tfmermaid-action@v1
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       with:
         file: ../README.md
         working-directory: ./terraform
