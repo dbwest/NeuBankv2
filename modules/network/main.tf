@@ -13,10 +13,10 @@ resource "azurerm_network_security_group" "vnet" {
   resource_group_name = var.rg_name
 }
 
-resource "azurerm_subnet_network_security_group_association" "vnet" {
-  subnet_id                 = azurerm_subnet.this.id
-  network_security_group_id = azurerm_network_security_group.vnet.id
-}
+# resource "azurerm_subnet_network_security_group_association" "vnet" {
+#   subnet_id                 = azurerm_subnet.this.id
+#   network_security_group_id = azurerm_network_security_group.vnet.id
+# }
 
 resource "azurerm_private_dns_zone" "this" {
   name                = "privatelink.azurewebsites.net"
