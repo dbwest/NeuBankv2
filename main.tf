@@ -10,7 +10,8 @@ module "network" {
   count  = var.enable ? 1 : 0
   source = "./modules/network"
 
-  location = var.region
+  company = var.company
+  region = var.region
   rg_name  = azurerm_resource_group.this[0].name
 }
 
