@@ -9,6 +9,6 @@ variable "company" {
 
 variable "enable" {
   description = "Turn env on?"
-  type = bool
-  default = false
+  type        = bool
+  default     = false
 }
