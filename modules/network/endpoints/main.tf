@@ -6,7 +6,7 @@ resource "azurerm_private_endpoint" "backend" {
 
   private_dns_zone_group {
     name                 = "privatednszonegroup"
-    private_dns_zone_ids = [var.private_dns_zone.id]
+    private_dns_zone_ids = [var.private_dns_zone_id]
   }
 
   private_service_connection {

@@ -16,7 +16,7 @@ resource "azurerm_private_dns_zone" "this" {
 
 resource "azurerm_app_service_virtual_network_swift_connection" "frontend" {
   app_service_id = var.frontend_id
-  subnet_id      = azurerm_subnet.integration.id
+  subnet_id      = module.subnets.integration_subnet_id
 }
 
 module "subnets" {
