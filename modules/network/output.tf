@@ -1,5 +1,5 @@
 output "vnet_name" {
-  value = azurerm_virtual_network.this.name
+  value = azurerm_virtual_network.neubank.name
 }
 
 output "integration_subnet_id" {
