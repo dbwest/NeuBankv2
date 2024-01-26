@@ -49,5 +49,8 @@ terraform_destroy:
 terraform_apply:
 	$(TERRAFORM_CMD) apply -auto-approve
 
+terraform_fmt:
+	$(TERRAFORM_CMD) format recursive
+
 tools:
 	nix --experimental-features 'nix-command flakes' develop
