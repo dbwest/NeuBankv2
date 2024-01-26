@@ -7,5 +7,5 @@ output "integration_subnet_id" {
 }
 
 output "endpoint_subnet_id" {
-  value = azurerm_subnet.endpoint.id
+  value = module.subnets.endpoint_subnet_id
 }
