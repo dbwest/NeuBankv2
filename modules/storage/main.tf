@@ -13,6 +13,12 @@ resource "azurerm_storage_account" "blob" {
   public_network_access_enabled   = false
   allow_nested_items_to_be_public = false
 
+  sas_policy {
+    expiration_period = "90.00:00:00"
+    expiration_action = "Log"
+  }
+
+
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
