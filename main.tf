@@ -25,7 +25,7 @@ module "app_stack" {
 }
 
 module "db" {
-  count  = 0
+  count  = var.enable ? 1 : 0
   source = "./modules/db"
 
   company   = var.company
