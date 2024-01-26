@@ -23,10 +23,10 @@ resource "azurerm_storage_account" "blob" {
 }
 
 resource "azurerm_private_endpoint" "blob" {
-  name                 = "${var.company}-${terraform.workspace}-stendpt-${var.region}"
-  location             = var.region
-  resource_group_name  = var.rg_name
-  subnet_id            = azurerm_subnet.example.id
+  name                = "${var.company}-${terraform.workspace}-stendpt-${var.region}"
+  location            = var.region
+  resource_group_name = var.rg_name
+  subnet_id           = azurerm_subnet.example.id
 
   private_service_connection {
     name                           = "example_psc"

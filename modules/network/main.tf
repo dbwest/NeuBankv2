@@ -22,20 +22,21 @@ resource "azurerm_app_service_virtual_network_swift_connection" "frontend" {
 module "subnets" {
   source = "./subnets"
 
-  company = var.company
-  region = var.region
-  rg_name = var.rg_name
+  company              = var.company
+  region               = var.region
+  rg_name              = var.rg_name
+  virtual_network_name = azurerm_virtual_network.this.name
 }
 
 module "endpoints" {
   source = "./endpoints"
 
-  company = var.company
-  region = var.region
-  rg_name = var.rg_name
-  endpoint_subnet_id = module.subnets.endpoint_subnet_id
+  company             = var.company
+  region              = var.region
+  rg_name             = var.rg_name
+  endpoint_subnet_id  = module.subnets.endpoint_subnet_id
   private_dns_zone_id = azurerm_private_dns_zone.this.id
-  backend_id = var.backend_id
+  backend_id          = var.backend_id
 }
 
 module "common" {

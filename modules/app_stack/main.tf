@@ -20,7 +20,7 @@ resource "azurerm_windows_web_app" "frontend" {
     vnet_route_all_enabled = true
   }
 
-   app_settings = {
+  app_settings = {
     "WEBSITE_DNS_SERVER" : "168.63.129.16"
     "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.this.instrumentation_key
     "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.this.connection_string
