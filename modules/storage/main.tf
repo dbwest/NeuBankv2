@@ -18,6 +18,12 @@ resource "azurerm_storage_account" "blob" {
     expiration_action = "Log"
   }
 
+  blob_properties {
+    delete_retention_policy {
+      days = 7
+    }
+  }
+
 
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
