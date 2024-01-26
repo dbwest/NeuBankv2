@@ -22,8 +22,8 @@ resource "azurerm_windows_web_app" "frontend" {
 
   app_settings = {
     "WEBSITE_DNS_SERVER" : "168.63.129.16"
-    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.this.instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.this.connection_string
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.app_insights_instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.app_insights_connection_string
   }
 
   tags = lookup(module.common.tags, terraform.workspace, null)
@@ -41,8 +41,8 @@ resource "azurerm_windows_web_app" "backend" {
   }
 
   app_settings = {
-    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.this.instrumentation_key
-    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.this.connection_string
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = var.app_insights_instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = var.app_insights_connection_string
   }
 
   tags = lookup(module.common.tags, terraform.workspace, null)

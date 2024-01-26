@@ -21,9 +21,11 @@ module "app_stack" {
   count  = var.enable ? 1 : 0
   source = "./modules/app_stack"
 
-  company = var.company
-  region  = var.region
-  rg_name = azurerm_resource_group.this[0].name
+  company                          = var.company
+  region                           = var.region
+  rg_name                          = azurerm_resource_group.this[0].name
+  app_insights_connection_string   = module.app_insights.connection_string
+  app_insights_instrumentation_key = module.app_insights.instrumentation_key
 }
 
 module "db" {
@@ -44,6 +46,15 @@ module "storage" {
   region             = var.region
   rg_name            = azurerm_resource_group.this[0].name
   endpoint_subnet_id = module.network.endpoint_subnet_id
+}
+
+module "app_insights" {
+  count  = var.enable ? 1 : 0
+  source = "./modules/app_insights"
+
+  company = var.company
+  region  = var.region
+  rg_name = azurerm_resource_group.this[0].name
 }
 
 module "common" {
