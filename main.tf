@@ -11,8 +11,8 @@ module "network" {
   source = "./modules/network"
 
   company = var.company
-  region = var.region
-  rg_name  = azurerm_resource_group.this[0].name
+  region  = var.region
+  rg_name = azurerm_resource_group.this[0].name
 }
 
 module "common" {
