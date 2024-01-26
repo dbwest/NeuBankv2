@@ -13,8 +13,8 @@ module "network" {
   company     = var.company
   region      = var.region
   rg_name     = azurerm_resource_group.this[0].name
-  frontend_id = module.app_stack.frontend_id
-  backend_id  = module.app_stack.backend_id
+  frontend_id = module.app_stack[0].frontend_id
+  backend_id  = module.app_stack[0].backend_id
 }
 
 module "app_stack" {
@@ -24,8 +24,8 @@ module "app_stack" {
   company                          = var.company
   region                           = var.region
   rg_name                          = azurerm_resource_group.this[0].name
-  app_insights_connection_string   = module.app_insights.connection_string
-  app_insights_instrumentation_key = module.app_insights.instrumentation_key
+  app_insights_connection_string   = module.app_insights[0].connection_string
+  app_insights_instrumentation_key = module.app_insights[0].instrumentation_key
 }
 
 module "db" {
