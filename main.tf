@@ -35,11 +35,11 @@ module "db" {
 }
 
 module "storage" {
-  count = 0
+  count  = 0
   source = "./modules/storage"
 
   company = var.company
-  region = var.region
+  region  = var.region
   rg_name = azurerm_resource_group.this[0].name
 }
 
