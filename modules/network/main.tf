@@ -1,4 +1,4 @@
-resource "azurerm_virtual_network" "neubank" {
+resource "azurerm_virtual_network" "this" {
   name                = "${var.company}-${terraform.workspace}-vnet-${var.region}"
   location            = var.region
   resource_group_name = var.rg_name
@@ -7,15 +7,15 @@ resource "azurerm_virtual_network" "neubank" {
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
-resource "azurerm_network_security_group" "neubank" {
-  name                = "${var.company}-${terraform.workspace}-nbknsg-${var.region}"
-  location            = azurerm_resource_group.neubank.location
-  resource_group_name = azurerm_resource_group.neubank.name
+resource "azurerm_network_security_group" "vnet" {
+  name                = "${var.company}-${terraform.workspace}-vnetnsg-${var.region}"
+  location            = var.region
+  resource_group_name = var.rg_name
 }
 
-resource "azurerm_subnet_network_security_group_association" "neubank" {
-  subnet_id                 = azurerm_subnet.neubank.id
-  network_security_group_id = azurerm_network_security_group.neubank.id
+resource "azurerm_subnet_network_security_group_association" "vnet" {
+  subnet_id                 = azurerm_subnet.this.id
+  network_security_group_id = azurerm_network_security_group.vnet.id
 }
 
 resource "azurerm_private_dns_zone" "this" {
