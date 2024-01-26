@@ -10,7 +10,11 @@ variable "rg_name" {
   type = string
 }
 
-variable "frontend_id" {
+variable "endpoint_subnet_id" {
+  type = string
+}
+
+variable "private_dns_zone_id" {
   type = string
 }
 

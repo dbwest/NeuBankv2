@@ -20,8 +20,10 @@ resource "azurerm_windows_web_app" "frontend" {
     vnet_route_all_enabled = true
   }
 
-  app_settings = {
-    WEBSITE_VNET_ROUTE_ALL = "1"
+   app_settings = {
+    "WEBSITE_DNS_SERVER" : "168.63.129.16"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.this.instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.this.connection_string
   }
 
   tags = lookup(module.common.tags, terraform.workspace, null)
@@ -36,11 +38,11 @@ resource "azurerm_windows_web_app" "backend" {
   public_network_access_enabled = false
 
   site_config {
-    vnet_route_all_enabled = true
   }
 
   app_settings = {
-    WEBSITE_VNET_ROUTE_ALL = "1"
+    "APPINSIGHTS_INSTRUMENTATIONKEY"        = azurerm_application_insights.this.instrumentation_key
+    "APPLICATIONINSIGHTS_CONNECTION_STRING" = azurerm_application_insights.this.connection_string
   }
 
   tags = lookup(module.common.tags, terraform.workspace, null)

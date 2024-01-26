@@ -13,6 +13,8 @@ module "network" {
   company = var.company
   region  = var.region
   rg_name = azurerm_resource_group.this[0].name
+  frontend_id = module.app_stack.frontend_id
+  backend_id = module.app_stack.backend_id
 }
 
 module "app_stack" {
@@ -35,7 +37,7 @@ module "db" {
 }
 
 module "storage" {
-  count  = 0
+  count  = var.enable ? 1 : 0
   source = "./modules/storage"
 
   company = var.company
