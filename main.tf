@@ -31,7 +31,7 @@ module "db" {
   company   = var.company
   region    = var.region
   rg_name   = azurerm_resource_group.this[0].name
-  vnet_name = module.network.vnet_name
+  vnet_name = module.network[0].vnet_name
 }
 
 module "common" {
