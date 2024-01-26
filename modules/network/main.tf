@@ -36,7 +36,7 @@ module "subnets" {
   company              = var.company
   region               = var.region
   rg_name              = var.rg_name
-  virtual_network_name = azurerm_virtual_network.neubank.name
+  virtual_network_name = azurerm_virtual_network.this.name
 }
 
 module "endpoints" {
