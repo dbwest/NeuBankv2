@@ -26,12 +26,11 @@ resource "azurerm_private_endpoint" "blob" {
   name                = "${var.company}-${terraform.workspace}-stendpt-${var.region}"
   location            = var.region
   resource_group_name = var.rg_name
-  subnet_id           = azurerm_subnet.example.id
-
+  subnet_id           = var.endpoint_subnet_id
   private_service_connection {
     name                           = "example_psc"
     is_manual_connection           = false
-    private_connection_resource_id = azurerm_storage_account.example.id
+    private_connection_resource_id = azurerm_storage_account.blob.id
     subresource_names              = ["blob"]
   }
 }

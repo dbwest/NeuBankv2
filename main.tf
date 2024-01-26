@@ -43,6 +43,7 @@ module "storage" {
   company = var.company
   region  = var.region
   rg_name = azurerm_resource_group.this[0].name
+  endpoint_subnet_id = module.network.endpoint_subnet_id
 }
 
 module "common" {

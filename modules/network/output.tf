@@ -5,3 +5,7 @@ output "vnet_name" {
 output "integration_subnet_id" {
   value = azurerm_subnet.integration.id
 }
+
+output "endpoint_subnet_id" {
+  value = azurerm_subnet.endpoint.id
+}
