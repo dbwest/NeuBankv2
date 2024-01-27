@@ -52,6 +52,9 @@ This project uses github actions. The pipeline for every environment branch does
 - it also updates the diagrams for that environment with `terraform graph` and pipes it to `graphviz` and does some other stuff to make it a .png and commit and push it back into the repo.
 
 ## Subnets
+
+Per the Azure documentation called (Create two web apps connected securely with Private Endpoint and VNet integration)[https://learn.microsoft.com/en-us/azure/app-service/scripts/terraform-secure-backend-frontend]...
+
 This uses a vnet and subnets. The subnets are:
 - Integration
 - Endpoint
