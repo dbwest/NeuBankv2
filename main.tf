@@ -24,9 +24,9 @@ module "app_stack" {
   count  = var.enable ? 1 : 0
   source = "./modules/app_stack"
 
-  company                          = var.company
-  region                           = var.region
-  rg_name                          = try(azurerm_resource_group.this[0].name, "")
+  company = var.company
+  region  = var.region
+  rg_name = try(azurerm_resource_group.this[0].name, "")
   # app_insights_connection_string   = module.app_insights[0].connection_string
   # app_insights_instrumentation_key = module.app_insights[0].instrumentation_key
 }
