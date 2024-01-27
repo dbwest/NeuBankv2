@@ -41,15 +41,15 @@ module "db" {
   vnet_name = try(module.network[0].vnet_name, "")
 }
 
-module "storage" {
-  count  = var.enable ? 1 : 0
-  source = "./modules/storage"
+# module "storage" {
+#   count  = var.enable ? 1 : 0
+#   source = "./modules/storage"
 
-  company            = var.company
-  region             = var.region
-  rg_name            = try(azurerm_resource_group.this[0].name, "")
-  endpoint_subnet_id = try(module.network[0].endpoint_subnet_id, "")
-}
+#   company            = var.company
+#   region             = var.region
+#   rg_name            = try(azurerm_resource_group.this[0].name, "")
+#   endpoint_subnet_id = try(module.network[0].endpoint_subnet_id, "")
+# }
 
 # module "app_insights" {
 #   count  = var.enable ? 1 : 0
