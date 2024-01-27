@@ -26,11 +26,11 @@ resource "azurerm_monitor_action_group" "this" {
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
-resource "azurerm_monitor_smart_detector_alert_rule" "example" {
+resource "azurerm_monitor_smart_detector_alert_rule" "this" {
   name                = "${var.company}-${terraform.workspace}-frontend-smt-det-rule-${var.region}"
   resource_group_name = var.rg_name
   severity            = "Sev3"
-  scope_resource_ids  = [azurerm_application_insights.example.id]
+  scope_resource_ids  = [azurerm_application_insights.this.id]
   frequency           = "PT1M"
   detector_type       = "FailureAnomaliesDetector"
 
