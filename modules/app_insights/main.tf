@@ -21,7 +21,7 @@ resource "azurerm_application_insights" "this" {
 resource "azurerm_monitor_action_group" "this" {
   name                = "${var.company}-${terraform.workspace}-action-group-${var.region}"
   resource_group_name = var.rg_name
-  short_name          = "appinsactiongrp"
+  short_name          = "${terraform.workspace}actgrp"
 
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
