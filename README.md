@@ -2,6 +2,12 @@
 
 ## Arch Diagrams
 
+`NeuBank.drawio.png` is a [draw.io](https://draw.io) diagram of all deployed resources done by hand.
+
+![draw.io hand diagram](NeuBank.drawio.png)
+
+This project also has some diagrams generated from graphviz files.
+
 `overview.png` is an overview arch diagram of this project as described in the original instructions.
 
 `overview.png`
