@@ -25,7 +25,7 @@ tfstate is stored in Azure. The bootstrap directory and the `make bootstrap` com
 
 ### github secrets
 
-this repo's settings need the secrets populated with the values it needs to auth into azure. `make bootstrap` also handles that. It depends on the user setting `PAT_AUTHORIZATION_TOKEN` in a local `.env` file that is sourced or just as an env var set and exported in their shell. As mentioned earlier, that token should be authorized to update secrets in the repo. The `make bootstrap` process also asks for a github username, provided a user has forked this and wants to get it working for them.
+this repo's settings need the secrets populated with the values it needs to auth into azure. `make bootstrap` also handles that. It depends on the user setting `PAT_TOKEN_VALUE` in a local `.env` file that is sourced or just as an env var set and exported in their shell. As mentioned earlier, that token should be authorized to update secrets in the repo. The `make bootstrap` process also asks for a github username, provided a user has forked this and wants to get it working for them.
 
 ### other bootstrap considerations
 
