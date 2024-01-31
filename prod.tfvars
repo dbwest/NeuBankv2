@@ -1,4 +1,4 @@
 region                   = "eastus"
-enable                   = false
+enable                   = true
 expose_presentation_tier = true
 
