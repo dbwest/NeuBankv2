@@ -33,6 +33,7 @@ digraph G {
     label = "module.network"
     fontname = "sans-serif"
     "module.network.azurerm_network_security_group.vnet" [label="azurerm_network_security_group.vnet"];
+    "module.network.azurerm_network_security_rule.vnet_deny_outbound" [label="azurerm_network_security_rule.vnet_deny_outbound"];
     "module.network.azurerm_private_dns_zone.this" [label="azurerm_private_dns_zone.this"];
     "module.network.azurerm_virtual_network.this" [label="azurerm_virtual_network.this"];
   }
@@ -80,6 +81,7 @@ digraph G {
   "module.db.azurerm_subnet_route_table_association.db" -> "module.db.azurerm_route_table.db";
   "module.db.azurerm_subnet_route_table_association.db" -> "module.db.azurerm_subnet_network_security_group_association.db";
   "module.network.azurerm_network_security_group.vnet" -> "azurerm_resource_group.this";
+  "module.network.azurerm_network_security_rule.vnet_deny_outbound" -> "module.network.azurerm_network_security_group.vnet";
   "module.network.azurerm_private_dns_zone.this" -> "azurerm_resource_group.this";
   "module.network.azurerm_virtual_network.this" -> "azurerm_resource_group.this";
   "module.network.module.endpoints.azurerm_app_service_virtual_network_swift_connection.frontend" -> "module.app_stack.azurerm_windows_web_app.frontend";
