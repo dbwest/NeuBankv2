@@ -4,6 +4,7 @@ resource "random_string" "sac" {
   upper   = false
 }
 
+# When public_network_access_enabled   = true, cannot get Terraform to access it.... 
 resource "azurerm_storage_account" "blob" {
   name                     = "${random_string.sac.result}${terraform.workspace}storacc${var.region}"
   resource_group_name      = var.rg_name
@@ -24,10 +25,10 @@ resource "azurerm_storage_account" "blob" {
     }
   }
 
-
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
+# This endpoint is in the subnet the backend uses
 resource "azurerm_private_endpoint" "blob" {
   name                = "${var.company}-${terraform.workspace}-stendpt-${var.region}"
   location            = var.region
@@ -49,6 +50,7 @@ resource "azurerm_storage_container" "blob" {
   container_access_type = "private"
 }
 
+# Include some starter media to get the team started
 resource "azurerm_storage_blob" "blob" {
   name                   = "rr123.gif"
   storage_account_name   = azurerm_storage_account.blob.name

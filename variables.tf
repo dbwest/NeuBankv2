@@ -12,3 +12,9 @@ variable "enable" {
   type        = bool
   default     = false
 }
+
+variable "expose_presentation_tier" {
+  description = "Expose presentation tier to public internet?"
+  type        = bool
+  default     = false
+}

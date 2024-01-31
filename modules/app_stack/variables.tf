@@ -17,3 +17,9 @@ variable "app_insights_instrumentation_key" {
 variable "app_insights_connection_string" {
   type = string
 }
+
+variable "expose_presentation_tier" {
+  description = "Expose presentation tier to public internet?"
+  type        = bool
+  default     = false
+}

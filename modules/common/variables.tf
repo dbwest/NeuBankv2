@@ -1,4 +1,6 @@
+# tags could alternately be handled as inputs on the root main.tf
 variable "common_tags" {
+  description = "Required Tags for Resources"
   type = map(object({
     Environment = string
     Owner       = string

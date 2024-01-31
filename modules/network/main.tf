@@ -15,6 +15,23 @@ resource "azurerm_network_security_group" "vnet" {
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
+# Prevent exfiltration of data
+# see https://learn.microsoft.com/en-us/azure/app-service/overview-private-endpoint#conceptual-overview
+resource "azurerm_network_security_rule" "vnet_deny_outbound" {
+  name                        = "vnet_deny_all_outbound"
+  priority                    = 100
+  direction                   = "Outbound"
+  access                      = "Deny"
+  protocol                    = "*"
+  source_port_range           = "*"
+  destination_port_range      = "*"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = var.rg_name
+  network_security_group_name = azurerm_network_security_group.vnet.name
+}
+
+# exists for backend access internally by devs
 resource "azurerm_private_dns_zone" "this" {
   name                = "privatelink.azurewebsites.net"
   resource_group_name = var.rg_name

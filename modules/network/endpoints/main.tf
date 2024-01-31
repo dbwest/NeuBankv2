@@ -1,8 +1,15 @@
+# see
+# https://learn.microsoft.com/en-us/azure/app-service/tutorial-secure-ntier-app
+# and
+# https://learn.microsoft.com/en-us/azure/app-service/scripts/terraform-secure-backend-frontend
+
+# VirtualNetworkSwiftConnection bridges an App Service with a VNet, allowing you to restrict inbound and outbound traffic for better security.
 resource "azurerm_app_service_virtual_network_swift_connection" "frontend" {
   app_service_id = var.frontend_id
   subnet_id      = var.integration_subnet_id
 }
 
+# Restricted endpoint for backend
 resource "azurerm_private_endpoint" "backend" {
   name                = "backwebappprivateendpoint"
   location            = var.region
