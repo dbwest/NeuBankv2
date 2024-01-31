@@ -1,7 +1,9 @@
+# some random animal name used to name resources for the managed db
 resource "random_pet" "db" {
   length = 1
 }
 
+# this random password could be sent to a vault or through another process to automatically notify DBAs after generation
 resource "random_password" "password" {
   length      = 20
   min_lower   = 1
@@ -19,6 +21,7 @@ resource "azurerm_network_security_group" "db" {
   tags = lookup(module.common.tags, terraform.workspace, null)
 }
 
+# This subnet is smaller since it only needs to hold a database cluster
 resource "azurerm_subnet" "db" {
   name                 = "${var.company}-${terraform.workspace}-${random_pet.db.id}-db-subnet-${var.region}"
   resource_group_name  = var.rg_name
@@ -79,6 +82,7 @@ resource "azurerm_mssql_managed_instance" "db" {
   depends_on = [azurerm_subnet_route_table_association.db]
 }
 
+# include common module for tagging
 module "common" {
   source = "../common"
 }
